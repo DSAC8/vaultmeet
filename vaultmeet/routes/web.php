@@ -2,14 +2,23 @@
 
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\VaultmeetController;
+use Illuminate\Http\Request; // Hozzáadva a Request importálása
 
-Route::get('/', function () {
-    return Inertia::render('Welcome');
-})->name('home');
 
-Route::get('dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::middleware('api')->group(function () {
+    Route::post('/register', [VaultmeetController::class, 'register']);
+    Route::post('/login', [VaultmeetController::class, 'login']);
+    Route::post('/logout', [VaultmeetController::class, 'logout']);
+    Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+        return $request->user();
+    });
+});
 
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+// Auth middleware nélkül elérhető user lekérdezés API útvonalon
+Route::get('/api/user-public', function (Request $request) {
+    return response()->json([
+        'user' => $request->user(),
+        'guest' => $request->user() === null,
+    ]);
+});

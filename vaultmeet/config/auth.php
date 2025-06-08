@@ -35,12 +35,20 @@ return [
     |
     */
 
-    'guards' => [
-        'web' => [
-            'driver' => 'session',
-            'provider' => 'users',
-        ],
+'guards' => [
+    'web' => [
+        'driver' => 'session',
+        'provider' => 'users',
     ],
+
+    'api' => [
+        'driver' => 'token', // vagy 'passport' ha azt használod, de ne 'sanctum'
+        'provider' => 'users',
+        'hash' => false,
+    ],
+],
+
+
 
     /*
     |--------------------------------------------------------------------------
@@ -62,7 +70,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
+            'model' => env('AUTH_MODEL', App\Models\Users::class),
         ],
 
         // 'users' => [
