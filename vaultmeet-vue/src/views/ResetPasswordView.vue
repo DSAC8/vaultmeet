@@ -23,7 +23,7 @@ const message = ref('')
 
 const resetPassword = async () => {
   try {
-    await axios.post('http://localhost:8000/api/reset-password', {
+    await axios.post('http://localhost:8000/api/pass_update', {
       token: route.query.token,
       password: password.value,
       password_confirmation: password_confirmation.value

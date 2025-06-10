@@ -1,33 +1,40 @@
 <template>
   <div>
-    <template v-if="!isAuthenticated">
+    <!-- Navbar mindig látható -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Handlee&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <nav>
+      <router-link to="/"><i class="fa-solid fa-house fa-2xl"></i></router-link> |
+      <router-link to="/about"><i class="fa-solid fa-question fa-2xl"></i></router-link> |
+      <router-link to="/newevent"><i class="fa-solid fa-plus fa-2xl"></i></router-link> |
+      <router-link to="/eventlistview"><i class="fa-solid fa-calendar fa-2xl"></i></router-link> |
+      <button @click="logout" class="btn btn-link" style="color:#f1be8b; background:none; border:none; cursor:pointer;">
+        <i class="fa-solid fa-right-from-bracket fa-2xl"></i>
+      </button>
+    </nav>
+    <!-- Feltételes tartalom -->
+    <template v-if="!isAuthenticated && !isPublicRoute">
       <loginView />
     </template>
     <template v-else>
-      <link rel="preconnect" href="https://fonts.googleapis.com">
-      <link rel="preconnect" href="https://fonts.gstatic.com">
-      <link href="https://fonts.googleapis.com/css2?family=Handlee&display=swap" rel="stylesheet">
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-      <nav>
-        <router-link to="/"><i class="fa-solid fa-house fa-2xl"></i></router-link> |
-        <router-link to="/about"><i class="fa-solid fa-question fa-2xl"></i></router-link> |
-       <router-link to="/newevent"><i class="fa-solid fa-plus fa-2xl"></i></router-link> |
-        <router-link to="/eventlistview"><i class="fa-solid fa-calendar fa-2xl"></i></router-link> |
-       <asd @click="logout" class="btn btn-link" style="color:#f1be8b;"><i class="fa-solid fa-right-from-bracket fa-2xl"></i></asd>
-      </nav>
       <router-view />
     </template>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import axios from 'axios'
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import loginView from './views/loginView.vue'
+import axios from 'axios'
 
 const isAuthenticated = ref(localStorage.getItem('isAuthenticated') === 'true')
-
+const route = useRoute()
+const publicRoutes = ['login', 'ResetPassword']
+const isPublicRoute = computed(() => publicRoutes.includes(route.name))
 
 window.addEventListener('storage', () => {
   isAuthenticated.value = localStorage.getItem('isAuthenticated') === 'true'
@@ -44,32 +51,25 @@ const logout = async () => {
 }
 </script>
 
-<style >
-
+<style>
 * {
-  
   background: radial-gradient(ellipse at bottom, #121b27 0%, #050608 100%) no-repeat center center fixed;
   font-family: "Handlee", cursive;
-  font-weight:500;
+  font-weight: 500;
   font-style: normal;
   color: #f1be8b;
 }
-
 </style>
 <style scoped>
-
 nav {
   padding: 30px;
   height: 40px;
 }
-
 nav a {
   font-weight: bold;
   color: #2c3e50;
 }
-
 nav a.router-link-exact-active {
   color: #42b983;
-  
 }
 </style>

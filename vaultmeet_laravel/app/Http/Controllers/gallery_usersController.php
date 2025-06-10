@@ -119,7 +119,7 @@ public function events_store(Request $request)
         return response()->json(['status' => 'error', 'message' => 'Registration failed'], 500);
     }
 
-    // Automatikus bejelentkezés
+   
     $token = $user->createToken('token')->plainTextToken;
 
     return response()->json([
@@ -181,24 +181,24 @@ public function events_store(Request $request)
     }
 
 
-    public function pass_update(Request $request)
-    {
-        $token = gallery_users::where('pass_token', $request->input('pass_token'))->first();
+public function pass_update(Request $request)
+{
+    $request->validate([
+        'token' => 'required',
+        'password' => 'required|confirmed|min:8',
+    ]);
 
-        if ($token) {
-            $updated = $token->update([
-                'password' => Hash::make($request->input('password')),
-            ]);
-            return response()->json([
-                'status' => 'success',
-                'data' => $token
-            ], 200);
-        } else {
-            return response()->json([
-                'error' => 'token is not valid'
-            ], 400);
-        }
+    $user = User::where('pass_token', $request->token)->first();
+    if (!$user) {
+        return response()->json(['message' => 'Érvénytelen vagy lejárt token!'], 400);
     }
+
+    $user->password = bcrypt($request->password);
+    $user->pass_token = null;
+    $user->save();
+
+    return response()->json(['message' => 'Jelszó sikeresen frissítve!']);
+}
 public function delete_event($id)
 {
     $event = Event::find($id);

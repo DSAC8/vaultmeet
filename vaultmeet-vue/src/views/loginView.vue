@@ -59,6 +59,7 @@ const login = async () => {
     console.log('Siker:', res.data.message)
     localStorage.setItem('isAuthenticated', 'true')
     window.location.reload()
+    router.push('/') 
   } catch (err) {
     error.value = 'Hibás belépési adatok.'
   }

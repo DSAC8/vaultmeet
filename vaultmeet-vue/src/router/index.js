@@ -37,7 +37,7 @@ const routes = [
     component:  EventListView
   },
   {
-    path: '/reset/new-pass',
+    path: '/new-pass',
     name: 'ResetPassword',
     component: ResetPasswordView
   }
