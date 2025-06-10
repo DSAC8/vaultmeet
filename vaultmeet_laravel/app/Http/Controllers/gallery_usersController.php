@@ -10,19 +10,69 @@ use Illuminate\Support\Facades\Cookie;
 use App\Models\gallery_users;
 use App\Models\user;
 use Illuminate\Support\Str;
-
+use App\Models\Event;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
 class gallery_usersController extends Controller
 {
 
     
 
+  public function events_list()
+    {
+        $events = Event::with('creatorUser')->orderBy('start_time', 'asc')->get();
 
+    $events = $events->map(function($event) {
+        return [
+            'id' => $event->id,
+            'title' => $event->title,
+            'description' => $event->description,
+            'location' => $event->location,
+            'start_time' => $event->start_time,
+            'end_time' => $event->end_time,
+            'creator_id' => $event->creator,
+            'creator_name' => $event->creatorUser ? $event->creatorUser->name : null,
+        ];
+    });
+
+    return response()->json($events);
+}
+
+public function events_store(Request $request)
+{
+ 
+    $validator = Validator::make($request->all(), [
+        'title' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'location' => 'nullable|string|max:255',
+        'start_time' => 'required|date',
+        'end_time' => 'required|date|after_or_equal:start_time',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
+    }
+
+    // LÉTREHOZÁS
+    $event = new Event();
+    $event->title = $request->title;
+    $event->description = $request->description;
+    $event->location = $request->location;
+    $event->start_time = $request->start_time;
+    $event->end_time = $request->end_time;
+    $event->creator = auth()->id(); // EZ FONTOS: csak belépett user csinálhat eventet
+    $event->save();
+
+    return response()->json([
+        'message' => 'Event created successfully',
+        'event' => $event
+    ], 201);
+}
 
 
     public function forgot_password(Request $request)
     {
         $user = gallery_users::where('email', $request->input('email'))->first();
-        
 
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
@@ -31,27 +81,28 @@ class gallery_usersController extends Controller
         $token = Str::random(16);
         $user->update(['pass_token' => $token]);
 
-        $frontendUrl = 'https://nagypeti.moriczcloud.hu/projekt/#/new-pass';
+        $frontendUrl = 'http://localhost:8080/new-pass'; // vagy http://127.0.0.1:8080/new-pass
         $resetLink = "$frontendUrl?token=$token";
 
-        $message = "
-            <html>
-                <body>
-                    <div style='background: linear-gradient(to bottom, rgba(28, 143, 151, 0.31), rgba(165, 8, 165, 0.31)), url(\"https://fiverr-res.cloudinary.com/images/t_main1,q_auto,f_auto,q_auto,f_auto/gigs/152164099/original/d793cc44e3997aa1d090c5d4d8041d7feb28e235/create-pixel-art-backgrounds.png\"); background-size: cover; border-radius: 10px 70% 37%  10px;  color:#c9f7cd; padding: 20px;'>
-                        <h1 style='color:#c9f7cd;'>A password reset request was made for your account, $user->name!</h1>
-                        <h2 style='color:#c9f7cd;'>
-                            To reset your password:
-                            <a href='$resetLink' style='color:#FFD700 ;text-decoration: underline;'>Reset Password</a>
-                        </h2>
-                        <h3 style='color:#c9f7cd;'>Request time: " . now() . "</h3>
-                        <img style='border-radius: 10px;' src='$this->image_url' alt='Map' />
+        $message = "<html>
+            <body>
+                <div style='background: linear-gradient(to bottom, rgba(28, 143, 151, 0.31), rgba(165, 8, 165, 0.31)), url(\"https://fiverr-res.cloudinary.com/images/t_main1,q_auto,f_auto,q_auto,f_auto/gigs/152164099/original/d793cc44e3997aa1d090c5d4d8041d7feb28e235/create-pixel-art-backgrounds.png\"); background-size: cover; border-radius: 10px 70% 37%  10px;  color:#c9f7cd; padding: 20px;'>
+                    <h1 style='color:#c9f7cd;'>A password reset request was made for your account, $user->name!</h1>
+                    <h2 style='color:#c9f7cd;'>
+                        To reset your password:
+                        <a href='$resetLink' style='color:#FFD700 ;text-decoration: underline;'>Reset Password</a>
+                    </h2>
+                    <h3 style='color:#c9f7cd;'>Request time: " . now() . "</h3>
+                    <img style='border-radius: 10px;' src='' alt='Map' />
                     </div>
                 </body>
             </html>
         ";
 
-        $headers = "Content-type: text/html; charset=UTF-8";
-        mail($request->input('email'), "Forgot Password!", $message, $headers);
+        Mail::raw($message, function ($mail) use ($request) {
+            $mail->to($request->input('email'))
+                ->subject('Forgot Password!');
+        });
 
         return response()->json(['message' => 'Password reset link sent!']);
     }
@@ -68,7 +119,7 @@ class gallery_usersController extends Controller
         return response()->json(['status' => 'error', 'message' => 'Registration failed'], 500);
     }
 
-    // Automatikus bejelentkeztetés
+    // Automatikus bejelentkezés
     $token = $user->createToken('token')->plainTextToken;
 
     return response()->json([
@@ -118,9 +169,15 @@ class gallery_usersController extends Controller
         ])->withCookie($cookie);
     }
 
-    public function user()
+    public function user(Request $request)
     {
-        return Auth::user();
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Not authenticated'], 401);
+        }
+
+        return response()->json($user);
     }
 
 
@@ -142,13 +199,50 @@ class gallery_usersController extends Controller
             ], 400);
         }
     }
+public function delete_event($id)
+{
+    $event = Event::find($id);
 
+    if (!$event) {
+        return response()->json(['message' => 'Event not found'], 404);
+    }
 
+    // Csak a saját esemény törölhető
+    if ($event->creator !== auth()->id()) {
+        return response()->json(['message' => 'Unauthorized'], 403);
+    }
 
+    $event->delete();
 
+    return response()->json(['message' => 'Event deleted successfully']);
+}
+public function update_event(Request $request, $id)
+{
+    $event = Event::find($id);
 
+    if (!$event) {
+        return response()->json(['message' => 'Event not found'], 404);
+    }
 
+    // Csak a saját esemény szerkeszthető
+    if ($event->creator !== auth()->id()) {
+        return response()->json(['message' => 'Unauthorized'], 403);
+    }
 
+    $validator = Validator::make($request->all(), [
+        'description' => 'required|string',
+    ]);
 
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
+    }
 
+    $event->description = $request->description;
+    $event->save();
+
+    return response()->json([
+        'message' => 'Description updated successfully',
+        'event' => $event
+    ]);
+}
 }

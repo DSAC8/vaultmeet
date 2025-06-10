@@ -1,73 +1,89 @@
 <template>
+  
+  <div class="login">
+    <h1>Login</h1>
+    <form @submit.prevent="login">
+      <!-- Email input -->
+      <div data-mdb-input-init class="form-outline mb-4">
+        <input v-model="email" type="email" id="form2Example1" class="form-control" required />
+        <label class="form-label" for="form2Example1">Email cím</label>
+      </div>
 
-    <div class="row">
-    
-    <div class="col-sm-4" >
-     <h2 align="center"> Login</h2>
-   
-     <form @submit.prevent="LoginData">
-     
-   
-     <div class="form-group" align="left">
-       <label>Email</label>
-       <input type="email" v-model="student.email" class="form-control"  placeholder="Email">
-     </div>
+      <!-- Password input -->
+      <div data-mdb-input-init class="form-outline mb-4">
+        <input v-model="password" type="password" id="form2Example2" class="form-control" required />
+        <label class="form-label" for="form2Example2">Jelszó</label>
+      </div>
 
+      <!-- 2 column grid layout for inline styling -->
+      <div class="row mb-4">
+        <div class="col d-flex justify-content-center">
 
-    <div class="form-group" align="left">
-    <label>Password</label>
-    <input type="password" v-model="student.password" class="form-control"  placeholder="Password">
+        </div>
+        <div class="col">
+          <!-- Simple link -->
+          <a href="#" @click.prevent="forgotPassword">Elfelejtett jelszó?</a>
+        </div>
+      </div>
+
+      <!-- Submit button -->
+      <button type="submit" data-mdb-button-init data-mdb-ripple-init
+        class="btn btn-primary btn-block mb-4">Bejelentkezés</button>
+
+      <!-- Error message -->
+      <p style="color: red;">{{ error }}</p>
+    </form>
   </div>
-
-     <button type="submit" class="btn btn-primary">Login</button>
-     </form>
-   </div>
-   </div>
-
 </template>
-   
-   <script>
-       import Vue from 'vue';
-       import axios from 'axios';
-   
-     Vue.use(axios)
-     export default {
-       name: 'Registation',
-       data () {
-         return {
-           result: {},
-           student:{
-                      email: '',
-                      password: ''
-           }
-         }
-       },
-       created() { 
-       },
-       mounted() {
-             console.log("mounted() called.......");
-         },
-       methods: {
-              LoginData()
-              {
-               axios.post("http://127.0.0.1:8000/api/login", this.student)
-               .then(
-                 ({data})=>{
-                  console.log(data);
-                  try {
-                  if (data.status === true) {
-                        alert("Login Successfully"); 
-                        this.$router.push({ name: 'HelloWorld' })
-                        } else {
-                        alert("Login failed")
-                        }
 
-                        } catch (err) {
-                        alert("Error, please try again");
-                        }    
-                 }
-               )
-              }
-         }
-     }
-     </script>
+<script setup>
+import { ref } from 'vue'
+import axios from 'axios'
+import { useRouter } from 'vue-router'
+
+const email = ref('')
+const password = ref('')
+const error = ref('')
+
+const router = useRouter()
+
+const login = async () => {
+  try {
+    const res = await axios.post('http://localhost:8000/api/login', {
+      email: email.value,
+      password: password.value
+    }, {
+      withCredentials: true
+    })
+
+    console.log('Siker:', res.data.message)
+    localStorage.setItem('isAuthenticated', 'true')
+    window.location.reload()
+  } catch (err) {
+    error.value = 'Hibás belépési adatok.'
+  }
+}
+
+const forgotPassword = async () => {
+  if (!email.value) {
+    error.value = 'Kérlek add meg az email címedet!'
+    return
+  }
+  try {
+    await axios.post('http://localhost:8000/api/forgot_password', {
+      email: email.value
+    })
+    error.value = 'Jelszó visszaállítási email elküldve!'
+  } catch (err) {
+    error.value = 'Hiba történt a jelszó visszaállításakor.'
+  }
+}
+</script>
+
+<style scoped>
+.login {
+  max-width: 400px;
+  margin: auto;
+  padding: 1rem;
+}
+</style>
