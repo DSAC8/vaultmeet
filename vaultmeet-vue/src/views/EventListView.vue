@@ -172,7 +172,7 @@ onMounted(() => {
   padding: 1.1rem 1rem 0.7rem 1rem;
   box-shadow: 0 1px 6px #0003;
   border: 1px solid #23262f;
-  background: transparent; /* nincs háttérszín */
+  background: transparent;
 }
 .event-header {
   display: flex;
@@ -200,7 +200,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: transparent; /* nincs háttérszín */
+  background: transparent; 
   border: 1px solid #353945;
 }
 .edit-chatbox {
@@ -208,7 +208,7 @@ onMounted(() => {
   padding: 0.7rem 1rem;
   margin-top: 0.7rem;
   box-shadow: 0 1px 4px #0002;
-  background: transparent; /* nincs háttérszín */
+  background: transparent; 
   border: 1px solid #353945;
 }
 .chatbox-input {
@@ -218,7 +218,7 @@ onMounted(() => {
   font-size: 1rem;
   width: 100%;
   box-sizing: border-box;
-  background: transparent; /* nincs háttérszín */
+  background: transparent; 
   color: #e7e7e7;
 }
 .edit-btns {
@@ -236,12 +236,7 @@ onMounted(() => {
   vertical-align: middle;
   transition: color 0.2s;
 }
-.icon-btn.save {
-  color: #27c46a; /* zöld pipa */
-}
-.icon-btn.cancel {
-  color: #e74c3c; /* piros x */
-}
+
 .icon-btn:hover {
   color: #fff;
 }

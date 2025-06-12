@@ -1,13 +1,13 @@
 <template>
   <div>
-    <!-- Navbar mindig látható -->
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Handlee&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
  
-    <!-- Navbar csak ha autentikált -->
+
     <nav v-if="isAuthenticated">
       <router-link to="/"><i class="fa-solid fa-house fa-2xl"></i></router-link> |
       <router-link to="/about"><i class="fa-solid fa-question fa-2xl"></i></router-link> |
@@ -17,7 +17,7 @@
         <i class="fa-solid fa-right-from-bracket fa-2xl"></i>
       </button>
     </nav>
-    <!-- Feltételes tartalom -->
+
     <template v-if="!isAuthenticated && !isPublicRoute">
       <loginView />
     </template>
@@ -66,12 +66,5 @@ const logout = async () => {
 nav {
   padding: 30px;
   height: 40px;
-}
-nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-nav a.router-link-exact-active {
-  color: #42b983;
 }
 </style>

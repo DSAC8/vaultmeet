@@ -22,10 +22,9 @@
         @keyup.enter="kuldes"
         type="text"
         class="chat-input"
-        placeholder="Írj be egy kérdést pl.: Mikor lesz az esemény?"
         ref="inputRef"
       />
-      <button @click="kuldes" class="chat-send-btn">Küldés</button>
+      <button @click="kuldes" class="chat-send-btn">Send</button>
     </div>
   </div>
 </template>
@@ -41,6 +40,24 @@ const inputRef = ref(null)
 const kuldes = async () => {
   if (!kerdes.value.trim()) return
 
+  
+  const lower = kerdes.value.toLowerCase()
+  if (
+    lower.includes('operator') ||
+    lower.includes('human') ||
+    lower.includes('real person') ||
+    lower.includes('ember') ||
+    lower.includes('ügyfélszolgálat')
+  ) {
+    messages.value.push({ type: 'user', text: kerdes.value })
+    messages.value.push({
+      type: 'bot',
+      text: 'Your request has been forwarded to a human operator. Please wait for further assistance.'
+    })
+    kerdes.value = ''
+    return
+  }
+
   messages.value.push({ type: 'user', text: kerdes.value })
 
   try {
@@ -49,7 +66,7 @@ const kuldes = async () => {
     })
     messages.value.push({ type: 'bot', text: response.data.valasz })
   } catch (error) {
-    messages.value.push({ type: 'bot', text: 'Hiba történt a válasz lekérésekor.' })
+    messages.value.push({ type: 'bot', text: 'An error occurred while retrieving the answer.' })
   }
   kerdes.value = ''
 }
@@ -74,7 +91,7 @@ const felolvas = (szoveg) => {
 .chat-container {
   max-width: 420px;
   margin: 2rem auto;
-  background: #181a20; /* fő háttérszín */
+  background: #181a20;
   border-radius: 12px;
   box-shadow: 0 2px 12px #0006;
   padding: 1.2rem;
@@ -87,7 +104,7 @@ const felolvas = (szoveg) => {
   margin-bottom: 1rem;
   color: #f1be8b;
   letter-spacing: 1px;
-  background-color: #181a20; /* egységes háttér */
+  background-color: #181a20;
   padding: 0.7rem 0;
   border-radius: 10px;
   box-shadow: 0 2px 12px #0006;
@@ -96,7 +113,7 @@ const felolvas = (szoveg) => {
   min-height: 220px;
   max-height: 320px;
   overflow-y: auto;
-  background: #181a20; /* egységes háttér */
+  background: #181a20; 
   border-radius: 8px;
   padding: 1rem;
   margin-bottom: 1rem;
@@ -116,7 +133,7 @@ const felolvas = (szoveg) => {
 }
 .chat-message.user {
   align-self: flex-end;
-  background: #a259ff; /* lila */
+  background: #a259ff; 
   color: #fff;
 }
 .chat-message.bot {

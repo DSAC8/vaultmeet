@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\Kulcsszo;
 use App\Models\Valaszok;    
 
-class gallery_usersController extends Controller
+class vaultmeetController extends Controller
 {
 
     
@@ -56,14 +56,14 @@ public function events_store(Request $request)
         return response()->json(['errors' => $validator->errors()], 422);
     }
 
-    // LÉTREHOZÁS
+    
     $event = new Event();
     $event->title = $request->title;
     $event->description = $request->description;
     $event->location = $request->location;
     $event->start_time = $request->start_time;
     $event->end_time = $request->end_time;
-    $event->creator = auth()->id(); // EZ FONTOS: csak belépett user csinálhat eventet
+    $event->creator = auth()->id();
     $event->save();
 
     return response()->json([
@@ -84,7 +84,7 @@ public function events_store(Request $request)
         $token = Str::random(16);
         $user->update(['pass_token' => $token]);
 
-        $frontendUrl = 'http://localhost:8080/new-pass'; // vagy http://127.0.0.1:8080/new-pass
+        $frontendUrl = 'http://localhost:8080/new-pass'; 
         $resetLink = "$frontendUrl?token=$token";
 
         $message = "<html>
@@ -255,7 +255,7 @@ public function valasz(Request $request)
     $kulcsszavak = Kulcsszo::with('valaszok')->get();
     $talalatok = [];
 
-    // Kulcsszavas találatok
+ 
     foreach ($kulcsszavak as $kulcsszo) {
         if (str_contains($kerdes, strtolower($kulcsszo->szo))) {
             $valasz = $kulcsszo->valaszok->first()->valasz ?? null;
@@ -269,7 +269,7 @@ public function valasz(Request $request)
         return response()->json(['valasz' => implode("\n\n", $talalatok)]);
     }
 
-    // Dátum alapján
+
     if (preg_match('/\d{4}[-. ]\d{2}[-. ]\d{2}/', $kerdes, $matches)) {
         $datum = date('Y-m-d', strtotime($matches[0]));
         $esemenyek = Event::with('creatorUser')->whereDate('start_time', $datum)->get();
@@ -292,7 +292,7 @@ public function valasz(Request $request)
         return response()->json(['valasz' => $valaszok->implode("\n-------------------------\n")]);
     }
 
-    // Felhasználónév alapján (szavanként)
+   
     foreach ($szavak as $szo) {
         $user = gallery_users::whereRaw('LOWER(name) LIKE ?', ["%$szo%"])->first();
         if ($user) {
@@ -315,7 +315,7 @@ public function valasz(Request $request)
         }
     }
 
-    // Helyszín alapján (szavanként)
+ 
     foreach ($szavak as $szo) {
         $helyszinesEsem = Event::with('creatorUser')
             ->whereRaw('LOWER(location) LIKE ?', ["%$szo%"])
@@ -337,7 +337,7 @@ public function valasz(Request $request)
         }
     }
 
-    // Esemény cím alapján (szavanként)
+
     foreach ($szavak as $szo) {
         $event = Event::with('creatorUser')
             ->whereRaw('LOWER(title) LIKE ?', ["%$szo%"])
@@ -355,7 +355,7 @@ public function valasz(Request $request)
         }
     }
 
-    // Ha semmi se talált
+  
     return response()->json(['valasz' => '❌ Nem találtam választ. Próbálkozz másképp.'], 404);
 }
 

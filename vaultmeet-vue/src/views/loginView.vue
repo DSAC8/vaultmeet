@@ -2,25 +2,23 @@
   <div class="login">
     <h1>Login</h1>
     <form @submit.prevent="login">
-      <!-- Email input -->
+
       <div data-mdb-input-init class="form-outline mb-4">
         <input v-model="email" type="email" id="form2Example1" class="form-control" required />
         <label class="form-label" for="form2Example1">Email</label>
       </div>
 
-      <!-- Password input -->
+
       <div data-mdb-input-init class="form-outline mb-4">
         <input v-model="password" type="password" id="form2Example2" class="form-control" required />
         <label class="form-label" for="form2Example2">Password</label>
       </div>
 
-      <!-- 2 column grid layout for inline styling -->
       <div class="row mb-4">
         <div class="col d-flex justify-content-center">
 
         </div>
         <div class="col">
-          <!-- Simple link -->
           <a href="#" 
              @click.prevent="forgotPassword" 
              :class="{ disabled: forgotBtnDisabled }"
@@ -31,11 +29,10 @@
         </div>
       </div>
 
-      <!-- Submit button -->
       <button type="submit" data-mdb-button-init data-mdb-ripple-init
         class="btn btn-primary btn-block mb-4">Login</button>
 
-      <!-- Error message -->
+ 
       <p style="color: red;">{{ error }}</p>
     </form>
   </div>
