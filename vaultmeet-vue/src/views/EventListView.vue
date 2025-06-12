@@ -1,38 +1,65 @@
 <template>
   <div class="event-list">
-    <h2>Események</h2>
+    <h2 class="title">Events</h2>
     <div v-if="loading" class="loading-spinner"></div>
-    <ul v-else-if="events.length">
-      <li v-for="event in events" :key="event.id">
-        <strong>{{ event.title }}</strong><br>
-        <span>{{ event.description }}</span><br>
-        <span>Helyszín: {{ event.location }}</span><br>
-        <span>Kezdés: {{ event.start_time }}</span><br>
-        <span>Befejezés: {{ event.end_time }}</span><br>
-        <span>
-          Létrehozó:
-          <template v-if="event.creator_name">
-            {{ event.creator_name }}
-          </template>
-          <template v-else>
-            ismeretlen
-          </template>
-        </span>
-        <div v-if="currentUserId && Number(event.creator_id) === Number(currentUserId)">
-          <button @click="deleteEvent(event.id)" style="margin-left: 1rem; color: red;">
+    <ul v-else-if="events.length" class="event-ul">
+      <li v-for="event in events" :key="event.id" class="event-li">
+        <div class="event-header">
+          <span class="event-title">{{ event.title }}</span>
+          <button
+            v-if="currentUserId && Number(event.creator_id) === Number(currentUserId)"
+            @click="deleteEvent(event.id)"
+            class="icon-btn"
+            title="Delete"
+          >
             <i class="fas fa-trash"></i>
-            <span class="visually-hidden">Törlés</span>
-          </button>
-          <button @click="updateEvent(event.id)" style="margin-left: 1rem; color: green;">
-            <i class="fas fa-edit"></i>
-            <span class="visually-hidden">Szerkesztés</span>
           </button>
         </div>
-        <div style="font-size:10px;"></div>
-        <hr>
+        <div class="event-info">
+          <span>Location: <b>{{ event.location }}</b></span>
+          
+          <span>Start: <b>{{ event.start_time }}</b></span>
+          <span>End: <b>{{ event.end_time }}</b></span>
+          <span>
+            Creator:
+            <template v-if="event.creator_name">
+              {{ event.creator_name }}
+            </template>
+            <template v-else>
+              unknown
+            </template>
+          </span>
+        </div>
+        <div v-if="editingId !== event.id" class="event-desc">
+          {{ event.description }}
+          <button
+            v-if="currentUserId && Number(event.creator_id) === Number(currentUserId)"
+            @click="startEdit(event)"
+            class="icon-btn"
+            title="Edit"
+          >
+            <i class="fas fa-edit"></i>
+          </button>
+        </div>
+        <div v-else class="edit-chatbox">
+          <textarea
+            v-model="editDescription"
+            class="chatbox-input"
+            rows="3"
+            style="width: 100%; resize: vertical;"
+          ></textarea>
+          <div class="edit-btns">
+            <button @click="saveEdit(event.id)" class="icon-btn save" title="Save">
+              <i class="fas fa-check"></i>
+            </button>
+            <button @click="cancelEdit" class="icon-btn cancel" title="Cancel">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
       </li>
     </ul>
-    <div v-else>Nincs esemény.</div>
+    <div v-else class="no-events">No events.</div>
   </div>
 </template>
 
@@ -43,6 +70,9 @@ import axios from 'axios'
 const events = ref([])
 const currentUserId = ref()
 const loading = ref(true)
+
+const editingId = ref(null)
+const editDescription = ref('')
 
 const fetchEvents = async () => {
   loading.value = true
@@ -69,17 +99,27 @@ const fetchCurrentUser = async () => {
   }
 }
 
-const updateEvent = async (id) => {
-  const newDescription = prompt('Új leírás (description):')
-  if (newDescription === null) return
+const startEdit = (event) => {
+  editingId.value = event.id
+  editDescription.value = event.description
+}
+
+const cancelEdit = () => {
+  editingId.value = null
+  editDescription.value = ''
+}
+
+const saveEdit = async (id) => {
   try {
     await axios.put(`http://localhost:8000/api/events/${id}`, {
-      description: newDescription
+      description: editDescription.value
     }, {
       withCredentials: true
     })
     const event = events.value.find(e => e.id === id)
-    if (event) event.description = newDescription
+    if (event) event.description = editDescription.value
+    editingId.value = null
+    editDescription.value = ''
     alert('Leírás frissítve!')
   } catch (err) {
     alert('Hiba történt a frissítés során.')
@@ -108,16 +148,117 @@ onMounted(() => {
 .event-list {
   max-width: 600px;
   margin: 2rem auto;
-  padding: 1rem;
+  border-radius: 14px;
+  box-shadow: 0 2px 16px #000a;
+  padding: 2rem 1.2rem;
+  color: #e7e7e7;
+
+}
+.title {
+  text-align: center;
+  color: #f1be8b;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  letter-spacing: 1px;
+}
+.event-ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.event-li {
+  border-radius: 10px;
+  margin-bottom: 1.2rem;
+  padding: 1.1rem 1rem 0.7rem 1rem;
+  box-shadow: 0 1px 6px #0003;
+  border: 1px solid #23262f;
+  background: transparent; /* nincs háttérszín */
+}
+.event-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.event-title {
+  font-size: 1.15rem;
+  font-weight: bold;
+  color: #f1be8b;
+}
+.event-info {
+  font-size: 0.97rem;
+  margin: 0.7rem 0 0.2rem 0;
+  color: #b3b3b3;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+}
+.event-desc {
+  margin-top: 0.7rem;
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  color: #e7e7e7;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent; /* nincs háttérszín */
+  border: 1px solid #353945;
+}
+.edit-chatbox {
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  margin-top: 0.7rem;
+  box-shadow: 0 1px 4px #0002;
+  background: transparent; /* nincs háttérszín */
+  border: 1px solid #353945;
+}
+.chatbox-input {
+  border: 1px solid #353945;
+  border-radius: 8px;
+  padding: 0.5rem;
+  font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  background: transparent; /* nincs háttérszín */
+  color: #e7e7e7;
+}
+.edit-btns {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+}
+.icon-btn {
+  background: none;
+  border: none;
+  padding: 0.2rem 0.4rem;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: #f1be8b;
+  vertical-align: middle;
+  transition: color 0.2s;
+}
+.icon-btn.save {
+  color: #27c46a; /* zöld pipa */
+}
+.icon-btn.cancel {
+  color: #e74c3c; /* piros x */
+}
+.icon-btn:hover {
+  color: #fff;
 }
 .loading-spinner {
   margin: 2rem auto;
-  border: 6px solid #eee;
-  border-top: 6px solid #42b983;
+  border: 6px solid #23262f;
+  border-top: 6px solid #f1be8b;
   border-radius: 50%;
   width: 48px;
   height: 48px;
   animation: spin 1s linear infinite;
+  background: transparent;
+}
+.no-events {
+  text-align: center;
+  color: #888;
+  margin-top: 2rem;
 }
 @keyframes spin {
   0% { transform: rotate(0deg);}

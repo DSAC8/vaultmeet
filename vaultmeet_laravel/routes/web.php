@@ -21,12 +21,14 @@ Route::controller(gallery_usersController::class)->group(function () {
     Route::post('api/login', 'login');
 
     Route::post('api/forgot_password', 'forgot_password');
-
+    Route::post('api/chat', 'valasz');
 
 });
 
 Route::middleware('auth:sanctum')->group(function () {
-        Route::post('api/events', [App\Http\Controllers\gallery_usersController::class, 'events_store']);
+     
+    //Route::post('api/chat', [App\Http\Controllers\gallery_usersController::class, 'events_store']);
+    Route::post('api/events', [App\Http\Controllers\gallery_usersController::class, 'events_store']);
     Route::get('api/events', [App\Http\Controllers\gallery_usersController::class, 'events_list']);
     Route::post('api/logout', [App\Http\Controllers\gallery_usersController::class, 'logout']);
     Route::middleware('auth:sanctum')->get('api/user', [gallery_usersController::class, 'user']);

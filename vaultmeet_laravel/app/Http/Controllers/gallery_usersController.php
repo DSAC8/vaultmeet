@@ -13,6 +13,9 @@ use Illuminate\Support\Str;
 use App\Models\Event;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Kulcsszo;
+use App\Models\Valaszok;    
+
 class gallery_usersController extends Controller
 {
 
@@ -207,7 +210,7 @@ public function delete_event($id)
         return response()->json(['message' => 'Event not found'], 404);
     }
 
-    // Csak a saját esemény törölhető
+    
     if ($event->creator !== auth()->id()) {
         return response()->json(['message' => 'Unauthorized'], 403);
     }
@@ -224,7 +227,7 @@ public function update_event(Request $request, $id)
         return response()->json(['message' => 'Event not found'], 404);
     }
 
-    // Csak a saját esemény szerkeszthető
+   
     if ($event->creator !== auth()->id()) {
         return response()->json(['message' => 'Unauthorized'], 403);
     }
@@ -245,4 +248,116 @@ public function update_event(Request $request, $id)
         'event' => $event
     ]);
 }
+public function valasz(Request $request)
+{
+    $kerdes = strtolower($request->input('kerdes'));
+    $szavak = preg_split('/[\s,.!?]+/', $kerdes, -1, PREG_SPLIT_NO_EMPTY);
+    $kulcsszavak = Kulcsszo::with('valaszok')->get();
+    $talalatok = [];
+
+    // Kulcsszavas találatok
+    foreach ($kulcsszavak as $kulcsszo) {
+        if (str_contains($kerdes, strtolower($kulcsszo->szo))) {
+            $valasz = $kulcsszo->valaszok->first()->valasz ?? null;
+            if ($valasz) {
+                $talalatok[] = $valasz;
+            }
+        }
+    }
+
+    if (!empty($talalatok)) {
+        return response()->json(['valasz' => implode("\n\n", $talalatok)]);
+    }
+
+    // Dátum alapján
+    if (preg_match('/\d{4}[-. ]\d{2}[-. ]\d{2}/', $kerdes, $matches)) {
+        $datum = date('Y-m-d', strtotime($matches[0]));
+        $esemenyek = Event::with('creatorUser')->whereDate('start_time', $datum)->get();
+
+        if ($esemenyek->isEmpty()) {
+            return response()->json(['valasz' => '📅 Ezen a napon nincsenek események.']);
+        }
+
+        $valaszok = $esemenyek->map(function ($e, $i) {
+            return
+                "📌 **Esemény #".($i+1)."**\n" .
+                "🎉 Cím: {$e->title}\n" .
+                "📍 Helyszín: {$e->location}\n" .
+                "🕒 Kezdés: {$e->start_time}\n" .
+                "🕕 Befejezés: {$e->end_time}\n" .
+                "👤 Létrehozó: " . ($e->creatorUser?->name ?? 'ismeretlen') . "\n" .
+                "📝 Leírás: {$e->description}\n";
+        });
+
+        return response()->json(['valasz' => $valaszok->implode("\n-------------------------\n")]);
+    }
+
+    // Felhasználónév alapján (szavanként)
+    foreach ($szavak as $szo) {
+        $user = gallery_users::whereRaw('LOWER(name) LIKE ?', ["%$szo%"])->first();
+        if ($user) {
+            $esemenyek = Event::with('creatorUser')->where('creator', $user->id)->get();
+
+            if (!$esemenyek->isEmpty()) {
+                $valaszok = $esemenyek->map(function ($e, $i) {
+                    return
+                        "📌 **Esemény #".($i+1)."**\n" .
+                        "🎉 Cím: {$e->title}\n" .
+                        "📍 Helyszín: {$e->location}\n" .
+                        "🕒 Kezdés: {$e->start_time}\n" .
+                        "🕕 Befejezés: {$e->end_time}\n" .
+                        "👤 Létrehozó: " . ($e->creatorUser?->name ?? 'ismeretlen') . "\n" .
+                        "📝 Leírás: {$e->description}\n";
+                });
+
+                return response()->json(['valasz' => $valaszok->implode("\n-------------------------\n")]);
+            }
+        }
+    }
+
+    // Helyszín alapján (szavanként)
+    foreach ($szavak as $szo) {
+        $helyszinesEsem = Event::with('creatorUser')
+            ->whereRaw('LOWER(location) LIKE ?', ["%$szo%"])
+            ->get();
+
+        if (!$helyszinesEsem->isEmpty()) {
+            $valaszok = $helyszinesEsem->map(function ($e, $i) {
+                return
+                    "📌 **Esemény #".($i+1)."**\n" .
+                    "🎉 Cím: {$e->title}\n" .
+                    "📍 Helyszín: {$e->location}\n" .
+                    "🕒 Kezdés: {$e->start_time}\n" .
+                    "🕕 Befejezés: {$e->end_time}\n" .
+                    "👤 Létrehozó: " . ($e->creatorUser?->name ?? 'ismeretlen') . "\n" .
+                    "📝 Leírás: {$e->description}\n";
+            });
+
+            return response()->json(['valasz' => $valaszok->implode("\n-------------------------\n")]);
+        }
+    }
+
+    // Esemény cím alapján (szavanként)
+    foreach ($szavak as $szo) {
+        $event = Event::with('creatorUser')
+            ->whereRaw('LOWER(title) LIKE ?', ["%$szo%"])
+            ->first();
+
+        if ($event) {
+            return response()->json(['valasz' =>
+                "🎉 **Esemény**: {$event->title}\n" .
+                "📝 Leírás: {$event->description}\n" .
+                "📍 Helyszín: {$event->location}\n" .
+                "🕒 Kezdés: {$event->start_time}\n" .
+                "🕕 Befejezés: {$event->end_time}\n" .
+                "👤 Létrehozó: " . ($event->creatorUser?->name ?? 'ismeretlen')
+            ]);
+        }
+    }
+
+    // Ha semmi se talált
+    return response()->json(['valasz' => '❌ Nem találtam választ. Próbálkozz másképp.'], 404);
+}
+
+
 }

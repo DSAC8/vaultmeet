@@ -5,8 +5,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Handlee&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-    <nav>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+ 
+    <!-- Navbar csak ha autentikált -->
+    <nav v-if="isAuthenticated">
       <router-link to="/"><i class="fa-solid fa-house fa-2xl"></i></router-link> |
       <router-link to="/about"><i class="fa-solid fa-question fa-2xl"></i></router-link> |
       <router-link to="/newevent"><i class="fa-solid fa-plus fa-2xl"></i></router-link> |

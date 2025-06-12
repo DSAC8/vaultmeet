@@ -1,18 +1,17 @@
 <template>
-  
   <div class="login">
     <h1>Login</h1>
     <form @submit.prevent="login">
       <!-- Email input -->
       <div data-mdb-input-init class="form-outline mb-4">
         <input v-model="email" type="email" id="form2Example1" class="form-control" required />
-        <label class="form-label" for="form2Example1">Email cím</label>
+        <label class="form-label" for="form2Example1">Email</label>
       </div>
 
       <!-- Password input -->
       <div data-mdb-input-init class="form-outline mb-4">
         <input v-model="password" type="password" id="form2Example2" class="form-control" required />
-        <label class="form-label" for="form2Example2">Jelszó</label>
+        <label class="form-label" for="form2Example2">Password</label>
       </div>
 
       <!-- 2 column grid layout for inline styling -->
@@ -22,13 +21,19 @@
         </div>
         <div class="col">
           <!-- Simple link -->
-          <a href="#" @click.prevent="forgotPassword">Elfelejtett jelszó?</a>
+          <a href="#" 
+             @click.prevent="forgotPassword" 
+             :class="{ disabled: forgotBtnDisabled }"
+             :style="{ pointerEvents: forgotBtnDisabled ? 'none' : 'auto', color: forgotBtnDisabled ? '#aaa' : '' }">
+            Forgot password?
+            <span v-if="forgotBtnDisabled">({{ forgotBtnTimer }})</span>
+          </a>
         </div>
       </div>
 
       <!-- Submit button -->
       <button type="submit" data-mdb-button-init data-mdb-ripple-init
-        class="btn btn-primary btn-block mb-4">Bejelentkezés</button>
+        class="btn btn-primary btn-block mb-4">Login</button>
 
       <!-- Error message -->
       <p style="color: red;">{{ error }}</p>
@@ -45,6 +50,10 @@ const email = ref('')
 const password = ref('')
 const error = ref('')
 
+const forgotBtnDisabled = ref(false)
+const forgotBtnTimer = ref(10)
+let timerInterval = null
+
 const router = useRouter()
 
 const login = async () => {
@@ -56,27 +65,38 @@ const login = async () => {
       withCredentials: true
     })
 
-    console.log('Siker:', res.data.message)
+    console.log('Success:', res.data.message)
     localStorage.setItem('isAuthenticated', 'true')
     window.location.reload()
     router.push('/') 
   } catch (err) {
-    error.value = 'Hibás belépési adatok.'
+    error.value = 'Invalid login credentials.'
   }
 }
 
 const forgotPassword = async () => {
   if (!email.value) {
-    error.value = 'Kérlek add meg az email címedet!'
+    error.value = 'Please enter your email address!'
     return
   }
+  forgotBtnDisabled.value = true
+  forgotBtnTimer.value = 10
+
+  timerInterval = setInterval(() => {
+    forgotBtnTimer.value--
+    if (forgotBtnTimer.value <= 0) {
+      forgotBtnDisabled.value = false
+      clearInterval(timerInterval)
+    }
+  }, 1000)
+
   try {
     await axios.post('http://localhost:8000/api/forgot_password', {
       email: email.value
     })
-    error.value = 'Jelszó visszaállítási email elküldve!'
+    error.value = 'Password reset email sent!'
   } catch (err) {
-    error.value = 'Hiba történt a jelszó visszaállításakor.'
+    error.value = 'An error occurred while requesting password reset.'
   }
 }
 </script>
@@ -84,7 +104,7 @@ const forgotPassword = async () => {
 <style scoped>
 .login {
   max-width: 400px;
-  margin: auto;
+  margin: 60px auto 0 auto; 
   padding: 1rem;
 }
 </style>
